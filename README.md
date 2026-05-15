@@ -65,20 +65,19 @@ DELETE /api/site/profile/avatar  # 重置头像
 >环境启动
  
 bash  
-# 安装依赖
+>安装依赖
 npm install
 
-# 启动前端开发环境
+>启动前端开发环境
 npm run dev
 
-# 启动后端服务
+>启动后端服务
 npm run backend
  
- 
-项目构建
+>项目构建
  
 bash  
-# 生产环境打包
+>生产环境打包
 npm run build
  
  
