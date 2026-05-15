@@ -99,7 +99,7 @@ npm run build
  
 >⚠️ 注意
  
-1. 后台登录地址： /admin/login 
-2. 头像修改必须在后台站点设置中操作，前台自动同步
-3. 生产部署可参考项目内  docker-compose.yml 、 frontend.Dockerfile  配置
-4. 已验证接口、图片资源均可正常访问（状态码 200）
+- 1. 后台登录地址： /admin/login 
+- 2. 头像修改必须在后台站点设置中操作，前台自动同步
+- 3. 生产部署可参考项目内  docker-compose.yml 、 frontend.Dockerfile  配置
+- 4. 已验证接口、图片资源均可正常访问（状态码 200）
