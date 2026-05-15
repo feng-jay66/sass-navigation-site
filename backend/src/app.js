@@ -140,7 +140,20 @@ app.decorate('authenticate', async (request, reply) => {
     await request.jwtVerify();
     const authHeader = request.headers.authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-    if (!token || tokenBlocklist.has(token)) {
+    if (!token || tokenBlocklist.has(token) || request.user?.role !== 'admin') {
+      return app.fail(reply, 401, 'Unauthorized');
+    }
+  } catch {
+    return app.fail(reply, 401, 'Unauthorized');
+  }
+});
+
+app.decorate('siteAuthenticate', async (request, reply) => {
+  try {
+    await request.jwtVerify();
+    const authHeader = request.headers.authorization || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (!token || tokenBlocklist.has(token) || request.user?.role !== 'site') {
       return app.fail(reply, 401, 'Unauthorized');
     }
   } catch {
@@ -407,7 +420,7 @@ app.post('/api/admin/auth/login', async (request, reply) => {
     return app.fail(reply, 401, 'Invalid username or password');
   }
 
-  const token = await reply.jwtSign({ uid: user.id, username: user.username }, { expiresIn: '7d' });
+  const token = await reply.jwtSign({ uid: user.id, username: user.username, role: 'admin' }, { expiresIn: '7d' });
   db.prepare('UPDATE admin_user SET last_login_at = ?, last_login_ip = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso(), getClientIp(request), user.id);
 
   return app.ok(reply, {
@@ -421,6 +434,107 @@ app.post('/api/admin/auth/login', async (request, reply) => {
       lastLoginAt: nowIso()
     }
   }, 'login successful');
+});
+
+app.post('/api/site/auth/register', async (request, reply) => {
+  const username = sanitizeText(request.body?.username || '');
+  const password = String(request.body?.password || '');
+  const nickname = sanitizeText(request.body?.nickname || username);
+  const email = sanitizeText(request.body?.email || '');
+
+  if (!username || !password) {
+    return app.fail(reply, 400, 'Username and password are required');
+  }
+  if (username.length < 3) {
+    return app.fail(reply, 400, 'Username must be at least 3 characters');
+  }
+  if (password.length < 6) {
+    return app.fail(reply, 400, 'Password must be at least 6 characters');
+  }
+
+  const existing = db.prepare('SELECT id FROM site_user WHERE username = ?').get(username);
+  if (existing) {
+    return app.fail(reply, 409, 'Username already exists');
+  }
+
+  const passwordHash = bcrypt.hashSync(password, 10);
+  const result = db.prepare(`
+    INSERT INTO site_user (username, password_hash, nickname, email, status)
+    VALUES (?, ?, ?, ?, 1)
+  `).run(username, passwordHash, nickname, email);
+
+  const user = db.prepare('SELECT id, username, nickname, avatar, email, bio, status, created_at, updated_at FROM site_user WHERE id = ?').get(result.lastInsertRowid);
+  return app.ok(reply, {
+    id: user.id,
+    username: user.username,
+    nickname: user.nickname,
+    avatar: user.avatar,
+    email: user.email,
+    bio: user.bio,
+    status: !!user.status,
+    createdAt: user.created_at,
+    updatedAt: user.updated_at
+  }, 'register successful');
+});
+
+app.post('/api/site/auth/login', async (request, reply) => {
+  const username = sanitizeText(request.body?.username || '');
+  const password = String(request.body?.password || '');
+
+  if (!username || !password) {
+    return app.fail(reply, 400, 'Username and password are required');
+  }
+
+  const user = db.prepare('SELECT * FROM site_user WHERE username = ?').get(username);
+  if (!user || user.status !== 1 || !bcrypt.compareSync(password, user.password_hash)) {
+    return app.fail(reply, 401, 'Invalid username or password');
+  }
+
+  const token = await reply.jwtSign({ uid: user.id, username: user.username, role: 'site' }, { expiresIn: '7d' });
+  db.prepare('UPDATE site_user SET last_login_at = ?, last_login_ip = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(nowIso(), getClientIp(request), user.id);
+
+  return app.ok(reply, {
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      nickname: user.nickname,
+      avatar: user.avatar,
+      email: user.email,
+      bio: user.bio,
+      lastLoginAt: nowIso()
+    }
+  }, 'login successful');
+});
+
+app.get('/api/site/auth/me', { preHandler: app.siteAuthenticate }, async (request, reply) => {
+  const user = db.prepare('SELECT id, username, nickname, avatar, email, bio, last_login_at, last_login_ip, status, created_at, updated_at FROM site_user WHERE id = ?').get(request.user.uid);
+  if (!user) {
+    return app.fail(reply, 404, 'User not found');
+  }
+
+  return app.ok(reply, {
+    id: user.id,
+    username: user.username,
+    nickname: user.nickname,
+    avatar: user.avatar,
+    email: user.email,
+    bio: user.bio,
+    lastLoginAt: user.last_login_at,
+    lastLoginIp: user.last_login_ip,
+    status: !!user.status,
+    createdAt: user.created_at,
+    updatedAt: user.updated_at
+  });
+});
+
+app.post('/api/site/auth/logout', { preHandler: app.siteAuthenticate }, async (request, reply) => {
+  const authHeader = request.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (token) {
+    tokenBlocklist.add(token);
+  }
+  return app.ok(reply, null, 'logout successful');
 });
 
 app.get('/api/admin/auth/me', { preHandler: app.authenticate }, async (request, reply) => {
@@ -1049,3 +1163,4 @@ process.on('SIGTERM', close);
 start();
 
 export default app;
+

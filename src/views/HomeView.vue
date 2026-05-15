@@ -8,6 +8,7 @@
       <div class="top-nav-links top-nav-links-centered">
         <a class="top-nav-link" href="#content-start">导航</a>
         <a class="top-nav-link" href="#profile-section">关于我</a>
+        <router-link class="top-nav-link" to="/me">用户中心</router-link>
         <a class="top-nav-link" href="/admin/login">后台</a>
       </div>
     </nav>
@@ -21,7 +22,8 @@
         <div class="hero-actions">
           <button class="primary-cta" @click="scrollToContent">浏览导航</button>
           <button class="secondary" @click="toggleTheme">{{ theme === 'dark' ? '切换浅色' : '切换深色' }}</button>
-          <a class="quick-link" href="/admin/login">进入后台</a>
+          <router-link class="quick-link" to="/me">我的账号</router-link>
+          <button class="secondary" type="button" @click="logoutFrontend">退出前台</button>
         </div>
       </div>
 
@@ -223,8 +225,10 @@
 
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue'
-import { api } from '../api'
+import { useRouter } from 'vue-router'
+import { api, clearFrontendSession } from '../api'
 
+const router = useRouter()
 const data = ref({ settings: {}, categories: [], featuredLinks: [], announcements: [], friendLinks: [] })
 const keyword = ref('')
 const activeCategory = ref('全部')
@@ -391,6 +395,17 @@ const toggleTheme = () => {
 
 const scrollToContent = () => {
   document.getElementById('content-start')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const logoutFrontend = async () => {
+  try {
+    await api.frontendLogout()
+  } catch (error) {
+    console.error('frontend logout failed', error)
+  } finally {
+    clearFrontendSession()
+    router.replace('/login')
+  }
 }
 
 const settings = computed(() => data.value.settings || {})

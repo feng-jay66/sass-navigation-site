@@ -6,10 +6,10 @@
     <div class="auth-page auth-page-immersive">
       <section class="auth-copy auth-copy-immersive glass-panel">
         <div class="auth-copy-main">
-          <p class="section-eyebrow">Admin Access</p>
-          <h2>欢迎回来。</h2>
+          <p class="section-eyebrow">Member Access</p>
+          <h2>先登录，再进入前台。</h2>
           <p>
-            使用更具表现力的登录页视觉，但保留当前后台登录逻辑，提供更强的沉浸感与高级感。
+            这是前台用户登录入口。未登录访问首页时，会先跳转到这里完成身份验证。
           </p>
         </div>
 
@@ -32,27 +32,27 @@
 
         <div class="spotlight-metrics spotlight-metrics-immersive">
           <div class="metric-chip">
-            <strong>Animated</strong>
-            <span>更生动的角色式登录氛围</span>
+            <strong>Protected</strong>
+            <span>前台内容需登录后访问</span>
           </div>
           <div class="metric-chip">
-            <strong>Secure</strong>
-            <span>沿用现有管理员认证流程</span>
+            <strong>Smooth</strong>
+            <span>登录后自动跳转回目标页面</span>
           </div>
         </div>
       </section>
 
       <form class="auth-card auth-card-immersive" @submit.prevent="submit">
         <div class="auth-card-topline">
-          <p class="section-eyebrow">Sign in</p>
+          <p class="section-eyebrow">Frontend Sign in</p>
           <span class="auth-status-dot"></span>
         </div>
-        <h1>后台登录</h1>
-        <p class="sub">请输入你的管理员账号与密码</p>
+        <h1>前台登录</h1>
+        <p class="sub">请输入前台访问账号与密码</p>
 
         <label class="auth-field">
           <span>用户名</span>
-          <input v-model="form.username" autocomplete="username" placeholder="输入管理员用户名" />
+          <input v-model="form.username" autocomplete="username" placeholder="输入前台用户名" />
         </label>
 
         <label class="auth-field">
@@ -60,7 +60,11 @@
           <input v-model="form.password" type="password" autocomplete="current-password" placeholder="输入登录密码" />
         </label>
 
-        <button class="auth-submit-button" :disabled="loading">{{ loading ? '登录中...' : '登录' }}</button>
+        <button class="auth-submit-button" :disabled="loading">{{ loading ? '登录中...' : '进入前台' }}</button>
+        <div class="auth-helper-row">
+          <span>还没有账号？</span>
+          <router-link to="/register">去注册</router-link>
+        </div>
         <p v-if="error" class="error-text">{{ error }}</p>
       </form>
     </div>
@@ -69,22 +73,25 @@
 
 <script setup>
 import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { api } from '../api'
+import { useRoute, useRouter } from 'vue-router'
+import { api, setFrontendSession } from '../api'
 
 const router = useRouter()
+const route = useRoute()
 const loading = ref(false)
 const error = ref('')
-const form = reactive({ username: '', password: '' })
+const form = reactive({ username: typeof route.query.username === 'string' ? route.query.username : '', password: '' })
 
 const submit = async () => {
   error.value = ''
   loading.value = true
   try {
-    const data = await api.login(form)
-    localStorage.setItem('adminToken', data.token)
-    localStorage.setItem('adminUser', JSON.stringify(data.userInfo))
-    router.push('/admin/dashboard')
+    const data = await api.frontendLogin(form)
+    setFrontendSession(data.token, data.user)
+    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+      ? route.query.redirect
+      : '/'
+    router.replace(redirect)
   } catch (err) {
     error.value = err.message
   } finally {

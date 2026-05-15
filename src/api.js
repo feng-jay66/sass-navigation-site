@@ -1,7 +1,25 @@
 export const API_BASE = import.meta.env.VITE_API_BASE || ''
 
-function getToken() {
-  return localStorage.getItem('adminToken') || ''
+export const FRONTEND_TOKEN_KEY = 'siteUserToken'
+export const FRONTEND_USER_KEY = 'siteUser'
+export const ADMIN_TOKEN_KEY = 'adminToken'
+export const ADMIN_USER_KEY = 'adminUser'
+
+export function getToken(tokenType = 'admin') {
+  if (tokenType === 'site') {
+    return localStorage.getItem(FRONTEND_TOKEN_KEY) || ''
+  }
+  return localStorage.getItem(ADMIN_TOKEN_KEY) || ''
+}
+
+export function clearFrontendSession() {
+  localStorage.removeItem(FRONTEND_TOKEN_KEY)
+  localStorage.removeItem(FRONTEND_USER_KEY)
+}
+
+export function setFrontendSession(token, user) {
+  localStorage.setItem(FRONTEND_TOKEN_KEY, token)
+  localStorage.setItem(FRONTEND_USER_KEY, JSON.stringify(user || null))
 }
 
 async function request(path, options = {}) {
@@ -10,7 +28,8 @@ async function request(path, options = {}) {
   if (hasJsonBody) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json'
   }
-  const token = getToken()
+  const tokenType = options.tokenType || 'admin'
+  const token = getToken(tokenType)
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
@@ -28,6 +47,10 @@ async function request(path, options = {}) {
     throw new Error(preview ? `服务端返回了非 JSON 内容：${preview}` : '服务端返回了空响应')
   }
 
+  if (response.status === 401 && tokenType === 'site') {
+    clearFrontendSession()
+  }
+
   if (!response.ok || json?.code !== 0) {
     throw new Error(json?.message || '请求失败')
   }
@@ -38,8 +61,15 @@ export const api = {
   getHome: () => request('/api/site/home'),
   searchSites: (keyword) => request(`/api/site/search?keyword=${encodeURIComponent(keyword)}`),
   clickLink: (id) => request(`/api/site/link/${id}/click`, { method: 'POST' }),
+
   login: (payload) => request('/api/admin/auth/login', { method: 'POST', body: JSON.stringify(payload) }),
   me: () => request('/api/admin/auth/me'),
+
+  frontendRegister: (payload) => request('/api/site/auth/register', { method: 'POST', body: JSON.stringify(payload), tokenType: 'site' }),
+  frontendLogin: (payload) => request('/api/site/auth/login', { method: 'POST', body: JSON.stringify(payload), tokenType: 'site' }),
+  frontendMe: () => request('/api/site/auth/me', { tokenType: 'site' }),
+  frontendLogout: () => request('/api/site/auth/logout', { method: 'POST', body: JSON.stringify({}), tokenType: 'site' }),
+
   getStats: () => request('/api/admin/dashboard/stats'),
   getCategories: () => request('/api/admin/categories'),
   createCategory: (payload) => request('/api/admin/categories', { method: 'POST', body: JSON.stringify(payload) }),

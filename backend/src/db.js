@@ -164,6 +164,21 @@ function createSchema(db) {
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
+    CREATE TABLE IF NOT EXISTS site_user (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      nickname TEXT NOT NULL DEFAULT '',
+      avatar TEXT NOT NULL DEFAULT '',
+      email TEXT NOT NULL DEFAULT '',
+      bio TEXT NOT NULL DEFAULT '',
+      status INTEGER NOT NULL DEFAULT 1,
+      last_login_at TEXT,
+      last_login_ip TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
     CREATE TABLE IF NOT EXISTS nav_category (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -260,6 +275,7 @@ function createSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_announcement_active ON announcement(is_active, is_pinned, sort_order);
     CREATE INDEX IF NOT EXISTS idx_friend_link_active ON friend_link(is_active, sort_order);
     CREATE INDEX IF NOT EXISTS idx_visit_log_visited_at ON visit_log(visited_at);
+    CREATE INDEX IF NOT EXISTS idx_site_user_status ON site_user(status, created_at);
   `);
 }
 
@@ -474,3 +490,4 @@ export {
   seedSettings,
   seedTags
 };
+
