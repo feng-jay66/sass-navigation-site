@@ -1,0 +1,1101 @@
+# 个人导航站项目需求文档
+
+## 1. 项目概述
+
+### 1.1 项目名称
+
+个人导航站系统
+
+### 1.2 项目背景
+
+基于 `soybean-admin` 项目进行二次开发，构建一个拥有前端展示站点、后台管理系统、后端服务和数据库的个人导航站。系统用于集中管理个人常用网站、工具、资源链接、分类、标签、公告、个人介绍等内容，并支持通过后台进行可视化维护。
+
+### 1.3 项目访问地址
+
+* 前台访问地址：`https://www.031117.top`
+* 后台访问地址：`https://www.031117.top/admin`
+* 后端接口地址：建议使用 `https://www.031117.top/api`
+
+### 1.4 项目目标
+
+1. 将 `soybean-admin` 改造为个人导航站后台管理系统。
+2. 新增一个面向访客的前台导航页面。
+3. 提供完整的后端接口服务。
+4. 支持 Docker 一键部署。
+5. 支持 Nginx 反向代理和 HTTPS。
+6. 支持后续 AI 辅助开发、维护和功能扩展。
+
+---
+
+## 2. 技术选型
+
+### 2.1 前端技术栈
+
+基于 `soybean-admin`：
+
+* Vue 3
+* Vite
+* TypeScript
+* Pinia
+* Vue Router
+* Naive UI
+* UnoCSS
+* Axios
+
+### 2.2 后端技术栈
+
+建议使用以下方案之一：
+
+#### 推荐方案 A：Node.js 后端
+
+* Node.js
+* NestJS 或 Fastify
+* TypeScript
+* Prisma ORM
+* MySQL / PostgreSQL
+* JWT 鉴权
+
+#### 推荐方案 B：Java 后端
+
+* Spring Boot 3
+* MyBatis Plus / JPA
+* MySQL / PostgreSQL
+* JWT 鉴权
+
+### 2.3 数据库
+
+推荐使用：
+
+* MySQL 8.0
+
+### 2.4 部署方案
+
+* Docker
+* Docker Compose
+* Nginx
+* HTTPS 证书，可使用 Let's Encrypt 或服务器面板证书
+
+---
+
+## 3. 系统角色
+
+### 3.1 访客
+
+无需登录，可以访问前台导航站。
+
+访客可进行：
+
+* 查看网站导航
+* 搜索链接
+* 按分类浏览
+* 查看推荐网站
+* 查看公告
+* 查看个人介绍
+
+### 3.2 管理员
+
+需要登录后台。
+
+管理员可进行：
+
+* 登录后台
+* 管理导航分类
+* 管理网站链接
+* 管理标签
+* 管理公告
+* 管理个人资料
+* 管理友情链接
+* 管理系统配置
+* 查看访问统计
+
+---
+
+## 4. 页面规划
+
+## 4.1 前台页面
+
+访问路径：`https://www.031117.top`
+
+### 4.1.1 首页
+
+首页用于展示个人导航内容。
+
+主要模块：
+
+1. 顶部区域
+
+   * 站点 Logo
+   * 站点名称
+   * 简短介绍
+   * 搜索框
+   * 深色 / 浅色模式切换
+
+2. 分类导航区
+
+   * 展示所有启用状态的分类
+   * 支持点击分类快速定位
+
+3. 网站卡片区
+
+   * 网站图标
+   * 网站名称
+   * 网站描述
+   * 网站链接
+   * 标签
+   * 是否推荐
+   * 点击后新窗口打开
+
+4. 推荐区域
+
+   * 展示管理员标记为推荐的网站
+
+5. 公告区域
+
+   * 展示后台发布的公告
+
+6. 个人信息区域
+
+   * 头像
+   * 昵称
+   * 简介
+   * GitHub / 邮箱 / 博客 / 社交链接
+
+7. 页脚
+
+   * 版权信息
+   * ICP 备案号，若有
+   * 运行时间
+
+### 4.1.2 搜索功能
+
+搜索范围：
+
+* 网站名称
+* 网站描述
+* 网站 URL
+* 标签
+* 分类名称
+
+搜索方式：
+
+* 前端本地搜索，适合数据量较小场景
+* 后端接口搜索，适合数据量较大场景
+
+第一版建议使用后端搜索接口。
+
+### 4.1.3 响应式适配
+
+需要适配：
+
+* PC
+* 平板
+* 手机
+
+移动端要求：
+
+* 卡片自动换行
+* 分类支持横向滚动
+* 搜索框适配小屏幕
+* 后台管理端可以优先保证 PC 体验
+
+---
+
+## 4.2 后台管理页面
+
+访问路径：`https://www.031117.top/admin`
+
+基于 `soybean-admin` 改造。
+
+### 4.2.1 登录页
+
+功能：
+
+* 管理员账号登录
+* JWT Token 登录态保存
+* 登录失败提示
+* 登录成功跳转后台首页
+
+第一版只需要单管理员账号。
+
+### 4.2.2 后台首页 / 控制台
+
+展示内容：
+
+* 网站链接总数
+* 分类总数
+* 今日访问量
+* 总访问量
+* 推荐链接数量
+* 最近新增链接
+* 系统运行状态
+
+### 4.2.3 导航分类管理
+
+功能：
+
+* 分类列表
+* 新增分类
+* 编辑分类
+* 删除分类
+* 启用 / 禁用分类
+* 排序
+
+字段：
+
+* 分类名称
+* 分类图标
+* 分类描述
+* 排序值
+* 状态
+* 创建时间
+* 更新时间
+
+### 4.2.4 网站链接管理
+
+功能：
+
+* 网站列表
+* 新增网站
+* 编辑网站
+* 删除网站
+* 启用 / 禁用网站
+* 设置推荐
+* 设置排序
+* 批量删除
+* 按分类筛选
+* 按名称搜索
+
+字段：
+
+* 网站名称
+* 网站 URL
+* 网站图标
+* 网站描述
+* 所属分类
+* 标签
+* 是否推荐
+* 排序值
+* 状态
+* 点击次数
+* 创建时间
+* 更新时间
+
+### 4.2.5 标签管理
+
+功能：
+
+* 标签列表
+* 新增标签
+* 编辑标签
+* 删除标签
+
+字段：
+
+* 标签名称
+* 标签颜色
+* 排序值
+* 创建时间
+
+### 4.2.6 公告管理
+
+功能：
+
+* 公告列表
+* 新增公告
+* 编辑公告
+* 删除公告
+* 启用 / 禁用公告
+
+字段：
+
+* 公告标题
+* 公告内容
+* 状态
+* 排序值
+* 创建时间
+
+### 4.2.7 个人资料管理
+
+功能：
+
+* 编辑头像
+* 编辑昵称
+* 编辑个人简介
+* 编辑邮箱
+* 编辑 GitHub
+* 编辑博客地址
+* 编辑其他社交链接
+
+### 4.2.8 友情链接管理
+
+功能：
+
+* 友情链接列表
+* 新增友情链接
+* 编辑友情链接
+* 删除友情链接
+* 启用 / 禁用友情链接
+
+字段：
+
+* 网站名称
+* 网站地址
+* 网站 Logo
+* 网站描述
+* 排序值
+* 状态
+
+### 4.2.9 系统配置
+
+功能：
+
+* 站点名称
+* 站点 Logo
+* 站点描述
+* 首页标题
+* 首页副标题
+* SEO 关键词
+* SEO 描述
+* ICP 备案号
+* 是否开启公告
+* 是否开启访问统计
+
+### 4.2.10 管理员账号管理
+
+第一版可简单实现：
+
+* 修改用户名
+* 修改密码
+
+后续版本可扩展：
+
+* 多管理员
+* 角色权限
+* 操作日志
+
+---
+
+## 5. 功能需求
+
+## 5.1 前台功能需求
+
+### 5.1.1 导航展示
+
+系统需要从后端获取启用状态的分类和网站链接，并按照排序值展示。
+
+展示规则：
+
+* 只展示状态为启用的数据
+* 分类按排序值升序排列
+* 网站按排序值升序排列
+* 推荐网站优先展示在推荐区域
+
+### 5.1.2 网站跳转
+
+用户点击网站卡片后：
+
+* 新窗口打开目标网站
+* 后端记录点击次数
+* 后端记录访问日志
+
+### 5.1.3 搜索
+
+用户输入关键词后，可以快速筛选网站。
+
+搜索结果为空时展示空状态。
+
+### 5.1.4 主题切换
+
+支持：
+
+* 浅色模式
+* 深色模式
+* 跟随系统
+
+第一版可只实现浅色和深色模式。
+
+---
+
+## 5.2 后台功能需求
+
+### 5.2.1 登录鉴权
+
+后台所有接口需要登录后访问。
+
+鉴权方式：
+
+* 用户登录成功后，后端返回 JWT Token
+* 前端将 Token 存储到本地
+* 后续接口请求携带 Token
+* Token 过期后跳转登录页
+
+### 5.2.2 数据管理
+
+后台需要提供完整 CRUD 功能：
+
+* 分类 CRUD
+* 网站 CRUD
+* 标签 CRUD
+* 公告 CRUD
+* 友情链接 CRUD
+* 系统配置 CRUD
+
+### 5.2.3 文件上传
+
+需要支持上传：
+
+* 网站图标
+* 站点 Logo
+* 用户头像
+
+第一版可使用本地文件存储。
+
+后续可扩展：
+
+* 阿里云 OSS
+* 腾讯云 COS
+* S3
+
+### 5.2.4 访问统计
+
+记录内容：
+
+* 页面访问量
+* 网站点击量
+* IP 地址
+* User-Agent
+* 访问时间
+
+第一版后台展示基础统计即可。
+
+---
+
+## 6. 接口规划
+
+接口统一前缀：`/api`
+
+## 6.1 前台公开接口
+
+### 获取首页数据
+
+```http
+GET /api/site/home
+```
+
+返回：
+
+* 站点配置
+* 分类列表
+* 网站列表
+* 推荐网站
+* 公告
+* 个人资料
+* 友情链接
+
+### 搜索网站
+
+```http
+GET /api/site/search?keyword=xxx
+```
+
+### 记录网站点击
+
+```http
+POST /api/site/link/{id}/click
+```
+
+---
+
+## 6.2 后台认证接口
+
+### 登录
+
+```http
+POST /api/admin/auth/login
+```
+
+请求参数：
+
+```json
+{
+  "username": "admin",
+  "password": "123456"
+}
+```
+
+返回：
+
+```json
+{
+  "token": "jwt-token",
+  "userInfo": {
+    "id": 1,
+    "username": "admin"
+  }
+}
+```
+
+### 获取当前用户信息
+
+```http
+GET /api/admin/auth/me
+```
+
+### 退出登录
+
+```http
+POST /api/admin/auth/logout
+```
+
+---
+
+## 6.3 后台管理接口
+
+### 分类接口
+
+```http
+GET /api/admin/categories
+POST /api/admin/categories
+PUT /api/admin/categories/{id}
+DELETE /api/admin/categories/{id}
+```
+
+### 网站链接接口
+
+```http
+GET /api/admin/links
+POST /api/admin/links
+PUT /api/admin/links/{id}
+DELETE /api/admin/links/{id}
+```
+
+### 标签接口
+
+```http
+GET /api/admin/tags
+POST /api/admin/tags
+PUT /api/admin/tags/{id}
+DELETE /api/admin/tags/{id}
+```
+
+### 公告接口
+
+```http
+GET /api/admin/announcements
+POST /api/admin/announcements
+PUT /api/admin/announcements/{id}
+DELETE /api/admin/announcements/{id}
+```
+
+### 系统配置接口
+
+```http
+GET /api/admin/settings
+PUT /api/admin/settings
+```
+
+### 文件上传接口
+
+```http
+POST /api/admin/upload
+```
+
+### 统计接口
+
+```http
+GET /api/admin/dashboard/stats
+```
+
+---
+
+## 7. 数据库设计
+
+## 7.1 admin_user 管理员表
+
+| 字段         | 类型       | 说明   |
+| ---------- | -------- | ---- |
+| id         | bigint   | 主键   |
+| username   | varchar  | 用户名  |
+| password   | varchar  | 加密密码 |
+| nickname   | varchar  | 昵称   |
+| avatar     | varchar  | 头像   |
+| status     | tinyint  | 状态   |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+## 7.2 nav_category 分类表
+
+| 字段          | 类型       | 说明   |
+| ----------- | -------- | ---- |
+| id          | bigint   | 主键   |
+| name        | varchar  | 分类名称 |
+| icon        | varchar  | 分类图标 |
+| description | varchar  | 分类描述 |
+| sort        | int      | 排序   |
+| status      | tinyint  | 状态   |
+| created_at  | datetime | 创建时间 |
+| updated_at  | datetime | 更新时间 |
+
+## 7.3 nav_link 网站链接表
+
+| 字段           | 类型       | 说明            |
+| ------------ | -------- | ------------- |
+| id           | bigint   | 主键            |
+| category_id  | bigint   | 分类 ID         |
+| name         | varchar  | 网站名称          |
+| url          | varchar  | 网站地址          |
+| icon         | varchar  | 网站图标          |
+| description  | varchar  | 网站描述          |
+| tags         | varchar  | 标签，第一版可使用逗号分隔 |
+| is_recommend | tinyint  | 是否推荐          |
+| sort         | int      | 排序            |
+| status       | tinyint  | 状态            |
+| click_count  | int      | 点击次数          |
+| created_at   | datetime | 创建时间          |
+| updated_at   | datetime | 更新时间          |
+
+## 7.4 nav_tag 标签表
+
+| 字段         | 类型       | 说明   |
+| ---------- | -------- | ---- |
+| id         | bigint   | 主键   |
+| name       | varchar  | 标签名称 |
+| color      | varchar  | 标签颜色 |
+| sort       | int      | 排序   |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+## 7.5 announcement 公告表
+
+| 字段         | 类型       | 说明   |
+| ---------- | -------- | ---- |
+| id         | bigint   | 主键   |
+| title      | varchar  | 公告标题 |
+| content    | text     | 公告内容 |
+| status     | tinyint  | 状态   |
+| sort       | int      | 排序   |
+| created_at | datetime | 创建时间 |
+| updated_at | datetime | 更新时间 |
+
+## 7.6 site_setting 站点配置表
+
+| 字段               | 类型       | 说明      |
+| ---------------- | -------- | ------- |
+| id               | bigint   | 主键      |
+| site_name        | varchar  | 站点名称    |
+| site_logo        | varchar  | 站点 Logo |
+| site_description | varchar  | 站点描述    |
+| home_title       | varchar  | 首页标题    |
+| home_subtitle    | varchar  | 首页副标题   |
+| seo_keywords     | varchar  | SEO 关键词 |
+| seo_description  | varchar  | SEO 描述  |
+| icp              | varchar  | ICP 备案号 |
+| footer_text      | varchar  | 页脚文案    |
+| created_at       | datetime | 创建时间    |
+| updated_at       | datetime | 更新时间    |
+
+## 7.7 friend_link 友情链接表
+
+| 字段          | 类型       | 说明      |
+| ----------- | -------- | ------- |
+| id          | bigint   | 主键      |
+| name        | varchar  | 网站名称    |
+| url         | varchar  | 网站地址    |
+| logo        | varchar  | 网站 Logo |
+| description | varchar  | 网站描述    |
+| sort        | int      | 排序      |
+| status      | tinyint  | 状态      |
+| created_at  | datetime | 创建时间    |
+| updated_at  | datetime | 更新时间    |
+
+## 7.8 visit_log 访问日志表
+
+| 字段         | 类型       | 说明             |
+| ---------- | -------- | -------------- |
+| id         | bigint   | 主键             |
+| type       | varchar  | 类型，page 或 link |
+| link_id    | bigint   | 链接 ID，可为空      |
+| ip         | varchar  | IP 地址          |
+| user_agent | varchar  | 浏览器信息          |
+| referer    | varchar  | 来源             |
+| created_at | datetime | 创建时间           |
+
+---
+
+## 8. 前端改造方案
+
+## 8.1 路由规划
+
+### 前台路由
+
+```txt
+/
+```
+
+对应前台导航首页。
+
+### 后台路由
+
+```txt
+/admin/login
+/admin/dashboard
+/admin/category
+/admin/link
+/admin/tag
+/admin/announcement
+/admin/profile
+/admin/friend-link
+/admin/setting
+```
+
+### Nginx 路由规则
+
+* `/` 指向前台应用
+* `/admin` 指向后台应用
+* `/api` 反向代理到后端服务
+* `/uploads` 指向上传文件目录或后端静态资源
+
+---
+
+## 8.2 前端项目结构建议
+
+如果基于单个前端项目改造：
+
+```txt
+src/
+  views/
+    home/                 # 前台导航页
+    admin/                # 后台页面
+  router/
+  service/
+  store/
+  components/
+```
+
+如果拆分为两个前端应用：
+
+```txt
+apps/
+  web/                    # 前台导航站
+  admin/                  # 后台管理系统，基于 soybean-admin
+packages/
+  shared/                 # 共享类型、工具、请求封装
+```
+
+推荐使用拆分方案，长期维护更清晰。
+
+---
+
+## 9. 后端模块规划
+
+后端建议划分模块：
+
+```txt
+modules/
+  auth/                   # 登录鉴权
+  user/                   # 管理员用户
+  category/               # 分类
+  link/                   # 网站链接
+  tag/                    # 标签
+  announcement/           # 公告
+  setting/                # 站点配置
+  upload/                 # 文件上传
+  stats/                  # 统计
+  public-site/            # 前台公开接口
+```
+
+---
+
+## 10. Docker 部署需求
+
+## 10.1 服务组成
+
+Docker Compose 至少包含：
+
+1. nginx
+2. frontend
+3. backend
+4. mysql
+
+可选：
+
+5. redis
+6. certbot
+
+## 10.2 推荐容器结构
+
+```txt
+personal-nav/
+  docker-compose.yml
+  nginx/
+    nginx.conf
+    conf.d/
+      nav.conf
+  frontend/
+    Dockerfile
+  backend/
+    Dockerfile
+  mysql/
+    init.sql
+  uploads/
+  .env
+```
+
+## 10.3 Docker Compose 服务说明
+
+### nginx
+
+职责：
+
+* 对外暴露 80 / 443
+* 代理前台页面
+* 代理后台页面
+* 代理后端 API
+* 处理 HTTPS
+
+### frontend
+
+职责：
+
+* 构建 Vue 前端项目
+* 输出静态文件
+* 可直接由 Nginx 托管
+
+### backend
+
+职责：
+
+* 提供 REST API
+* 连接数据库
+* 处理上传文件
+* 处理鉴权和统计
+
+### mysql
+
+职责：
+
+* 存储系统数据
+
+---
+
+## 11. 域名与 Nginx 需求
+
+### 11.1 访问规则
+
+| 地址                               | 说明     |
+| -------------------------------- | ------ |
+| `https://www.031117.top`         | 前台导航站  |
+| `https://www.031117.top/admin`   | 后台管理系统 |
+| `https://www.031117.top/api`     | 后端接口   |
+| `https://www.031117.top/uploads` | 上传资源   |
+
+### 11.2 Nginx 伪配置示例
+
+```nginx
+server {
+  listen 80;
+  server_name www.031117.top;
+
+  location /api/ {
+    proxy_pass http://backend:3000/api/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  location /uploads/ {
+    proxy_pass http://backend:3000/uploads/;
+  }
+
+  location /admin/ {
+    root /usr/share/nginx/html;
+    try_files $uri $uri/ /admin/index.html;
+  }
+
+  location / {
+    root /usr/share/nginx/html;
+    try_files $uri $uri/ /index.html;
+  }
+}
+```
+
+---
+
+## 12. 权限需求
+
+第一版权限要求：
+
+* 前台公开访问
+* 后台登录后访问
+* 后台接口必须校验 Token
+* 上传接口必须登录后访问
+* 管理员密码必须加密存储
+
+后续可扩展：
+
+* 多用户
+* 角色管理
+* 菜单权限
+* 按钮权限
+* 操作日志
+
+---
+
+## 13. 安全需求
+
+1. 管理员密码必须使用 bcrypt 或 Argon2 加密。
+2. 后台接口必须进行 JWT 鉴权。
+3. 上传文件需要限制类型和大小。
+4. 防止 XSS，公告内容和描述内容需要转义或白名单过滤。
+5. 防止 SQL 注入，使用 ORM 或参数化查询。
+6. 后台登录需要失败提示，不暴露具体账号是否存在。
+7. 生产环境关闭调试日志。
+8. `.env` 文件不得提交到 Git 仓库。
+
+---
+
+## 14. SEO 需求
+
+前台需要支持基础 SEO：
+
+* title
+* description
+* keywords
+* favicon
+* Open Graph 信息
+
+由于 Vue SPA 对 SEO 不完全友好，第一版可接受基础 SEO。
+
+后续可考虑：
+
+* SSR
+* SSG
+* Nuxt 重构前台
+
+---
+
+## 15. 第一版 MVP 范围
+
+第一版必须完成：
+
+1. 前台导航首页
+2. 后台登录
+3. 分类管理
+4. 网站链接管理
+5. 标签管理
+6. 站点配置管理
+7. 公告管理
+8. 文件上传
+9. 访问统计基础版
+10. Docker Compose 部署
+11. Nginx 支持 `/`、`/admin`、`/api`
+
+第一版可以暂缓：
+
+1. 多管理员
+2. 复杂角色权限
+3. 操作日志
+4. 第三方对象存储
+5. SSR SEO
+6. 高级数据分析
+
+---
+
+## 16. AI 辅助开发要求
+
+为了便于 AI 协助开发，需要遵守以下规范：
+
+### 16.1 代码规范
+
+* 前端使用 TypeScript
+* 后端使用 TypeScript 或 Java
+* 接口字段统一使用小驼峰或下划线，项目内保持一致
+* 所有接口返回格式统一
+
+推荐接口返回格式：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {}
+}
+```
+
+### 16.2 AI 开发顺序
+
+建议按以下顺序让 AI 帮助实现：
+
+1. 搭建后端基础项目
+2. 设计数据库 SQL
+3. 实现登录鉴权
+4. 实现分类接口
+5. 实现网站链接接口
+6. 实现前台首页接口
+7. 改造 soybean-admin 后台菜单和页面
+8. 开发前台导航首页
+9. 编写 Dockerfile
+10. 编写 docker-compose.yml
+11. 编写 Nginx 配置
+12. 部署到服务器
+
+### 16.3 每次给 AI 的任务粒度
+
+建议每次只让 AI 完成一个明确任务，例如：
+
+* “帮我生成 MySQL 建表 SQL”
+* “帮我写 NestJS 分类模块 CRUD”
+* “帮我改造 soybean-admin 菜单，只保留导航站相关菜单”
+* “帮我写 Docker Compose 部署配置”
+
+不要一次性让 AI 完成整个项目。
+
+---
+
+## 17. 验收标准
+
+### 17.1 前台验收
+
+* 可以通过 `https://www.031117.top` 正常访问。
+* 能展示分类和网站链接。
+* 能搜索网站。
+* 点击网站能正常跳转。
+* 移动端显示正常。
+
+### 17.2 后台验收
+
+* 可以通过 `https://www.031117.top/admin` 正常访问。
+* 管理员可以登录。
+* 可以新增、编辑、删除分类。
+* 可以新增、编辑、删除网站链接。
+* 可以上传图标。
+* 修改内容后前台实时生效。
+
+### 17.3 接口验收
+
+* `/api/site/home` 能正常返回首页数据。
+* 后台接口未登录时不能访问。
+* 登录后携带 Token 可以访问后台接口。
+
+### 17.4 部署验收
+
+* Docker Compose 可以一键启动。
+* Nginx 代理正常。
+* 前台、后台、接口路径互不冲突。
+* 数据库数据持久化。
+* 上传文件持久化。
+
+---
+
+## 18. 后续扩展方向
+
+1. 支持多主题模板。
+2. 支持卡片拖拽排序。
+3. 支持网站自动获取 favicon。
+4. 支持网站状态检测。
+5. 支持公开提交网站。
+6. 支持访客评论或反馈。
+7. 支持访问趋势图表。
+8. 支持多用户导航空间。
+9. 支持浏览器书签导入。
+10. 支持 AI 自动分类和生成网站描述。
