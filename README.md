@@ -56,17 +56,13 @@ plaintext
 - 入口路径：后台 → 站点设置
 - 支持功能：头像预览、上传头像、重置头像
 - 存储方式：服务器文件存储，非 localStorage
-- 复用接口：
-```bash
+- 复用接口：```bash
 POST /api/site/profile/avatar    # 上传头像
 DELETE /api/site/profile/avatar  # 重置头像
  
+## 🚀 开发与构建
  
- 
- 
-##🚀 开发与构建
- 
-环境启动
+>环境启动
  
 bash  
 # 安装依赖
