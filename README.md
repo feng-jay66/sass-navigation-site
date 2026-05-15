@@ -40,11 +40,16 @@
  
  
 sass-navigation-site/
-├── src/          # 前端页面、组件与样式
-├── backend/      # 后端服务、接口与数据层
-├── deploy/       # 部署相关配置文件
-├── dist/         # 前端打包构建产物
-└── index.html    # 项目入口文件
+├── src/          
+# 前端页面、组件与样式
+├── backend/      
+# 后端服务、接口与数据层
+├── deploy/       
+# 部署相关配置文件
+├── dist/        
+ # 前端打包构建产物
+└── index.html    
+# 项目入口文件
  
 plaintext  
 
